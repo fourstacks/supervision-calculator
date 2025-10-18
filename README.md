@@ -37,7 +37,7 @@ No build step required! Everything runs directly in the browser via CDNs.
 
 ## Live Demo
 
-Visit the live version at: [Your GitHub Pages URL]
+Visit the live version at: [https://supervisioncalculator.org/](https://supervisioncalculator.org/)
 
 ## Contributing
 
