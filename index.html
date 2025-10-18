@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervision Hours Calculator</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #fefefe;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e5e7eb' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto" x-data="calculator()">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-3">Supervision Hours Calculator</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Calculate whether your supervision hours meet the requirements for your counselling training. Enter your supervision ratio and client details to get started.
+            </p>
+        </div>
+
+        <!-- Main Container -->
+        <div class="space-y-6">
+
+            <!-- My Ratio -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">My Ratio</h2>
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-gray-700">For every</span>
+                    <input
+                        type="number"
+                        x-model.number="ratio.clientHours"
+                        min="1"
+                        class="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                    <span class="text-gray-700">client hours I need</span>
+                    <input
+                        type="number"
+                        x-model.number="ratio.supervisionMinutes"
+                        min="1"
+                        class="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                    <span class="text-gray-700">minutes of supervision</span>
+                </div>
+            </div>
+
+            <!-- My Clients -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">My Clients</h2>
+                <div class="space-y-4">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-gray-700">I see</span>
+                        <input
+                            type="number"
+                            x-model.number="clients.perWeek"
+                            min="0"
+                            class="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                        <span class="text-gray-700">clients each week. Client sessions are</span>
+                        <input
+                            type="number"
+                            x-model.number="clients.sessionMinutes"
+                            min="1"
+                            class="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                        <span class="text-gray-700">minutes long.</span>
+                    </div>
+                    <p class="text-sm text-gray-500 italic">
+                        Note: 50-minute sessions are automatically counted as a full "therapeutic hour" (60 minutes).
+                    </p>
+                </div>
+            </div>
+
+            <!-- My Supervision -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-gray-900">My Supervision</h2>
+                    <button
+                        @click="addSupervision()"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add Supervision
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <template x-if="supervision.length === 0">
+                        <div class="text-center py-8 text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            <p class="mt-2">No supervision added yet. Click "Add Supervision" to get started.</p>
+                        </div>
+                    </template>
+
+                    <template x-for="(item, index) in supervision" :key="index">
+                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Supervisor Name -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Supervisor/Organisation Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        x-model="item.name"
+                                        placeholder="Enter name"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                </div>
+
+                                <!-- Type -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Type
+                                    </label>
+                                    <select
+                                        x-model="item.type"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                        <option value="individual">Individual</option>
+                                        <option value="group">Group</option>
+                                    </select>
+                                </div>
+
+                                <!-- Minutes per month -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Minutes per Month
+                                    </label>
+                                    <input
+                                        type="number"
+                                        x-model.number="item.minutesPerMonth"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                </div>
+
+                                <!-- Group percentage (only for group supervision) -->
+                                <template x-if="item.type === 'group'">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Percentage to Count (for group supervision)
+                                        </label>
+                                        <div class="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                x-model.number="item.groupPercentage"
+                                                min="0"
+                                                max="100"
+                                                placeholder="50"
+                                                class="w-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                            >
+                                            <span class="text-gray-700">%</span>
+                                            <span class="text-sm text-gray-500">(e.g., 50% for groups under 4, 25% for groups over 4)</span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Remove button -->
+                            <div class="mt-4 flex justify-end">
+                                <button
+                                    @click="removeSupervision(index)"
+                                    class="inline-flex items-center px-3 py-1.5 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                >
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Results</h2>
+
+                <template x-if="validationMessage">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700" x-text="validationMessage"></p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="!validationMessage && result">
+                    <div>
+                        <!-- Main result message -->
+                        <div :class="result.isSufficient ? 'bg-green-50 border-green-400' : 'bg-red-50 border-red-400'" class="border-l-4 p-4 mb-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg x-show="result.isSufficient" class="h-6 w-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <svg x-show="!result.isSufficient" class="h-6 w-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 :class="result.isSufficient ? 'text-green-800' : 'text-red-800'" class="text-lg font-medium" x-text="result.message"></h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Breakdown -->
+                        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                            <h4 class="font-medium text-gray-900 mb-3">Breakdown:</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Client hours per month:</span>
+                                    <span class="font-semibold text-gray-900" x-text="result.clientHoursPerMonth.toFixed(1)"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Supervision required:</span>
+                                    <span class="font-semibold text-gray-900" x-text="result.supervisionRequired.toFixed(1) + ' hours'"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Supervision provided:</span>
+                                    <span class="font-semibold text-gray-900" x-text="result.supervisionProvided.toFixed(1) + ' hours'"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Difference:</span>
+                                    <span :class="result.isSufficient ? 'text-green-600' : 'text-red-600'" class="font-semibold" x-text="(result.supervisionProvided - result.supervisionRequired >= 0 ? '+' : '') + (result.supervisionProvided - result.supervisionRequired).toFixed(1) + ' hours'"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- What if I take on another client? -->
+                        <div class="mt-4 bg-blue-50 rounded-lg p-4">
+                            <h4 class="font-medium text-blue-900 mb-2">If you take on another client:</h4>
+                            <p class="text-sm text-blue-800" x-text="result.oneMoreClientMessage"></p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Reset Button -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <button
+                        @click="resetCalculator()"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Reset All Data
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>Open source project • <a href="https://github.com" class="text-indigo-600 hover:text-indigo-500">View on GitHub</a></p>
+        </div>
+    </div>
+
+    <script>
+        function calculator() {
+            return {
+                ratio: {
+                    clientHours: 6,
+                    supervisionMinutes: 60
+                },
+                clients: {
+                    perWeek: 1,
+                    sessionMinutes: 50
+                },
+                supervision: [],
+
+                init() {
+                    // Load from localStorage
+                    const saved = localStorage.getItem('supervisionCalculatorData');
+                    if (saved) {
+                        try {
+                            const data = JSON.parse(saved);
+                            this.ratio = data.ratio || this.ratio;
+                            this.clients = data.clients || this.clients;
+                            this.supervision = data.supervision || this.supervision;
+                        } catch (e) {
+                            console.error('Failed to load saved data:', e);
+                        }
+                    }
+
+                    // Watch for changes and save to localStorage
+                    this.$watch('ratio', () => this.saveToLocalStorage());
+                    this.$watch('clients', () => this.saveToLocalStorage());
+                    this.$watch('supervision', () => this.saveToLocalStorage());
+                },
+
+                saveToLocalStorage() {
+                    const data = {
+                        ratio: this.ratio,
+                        clients: this.clients,
+                        supervision: this.supervision
+                    };
+                    localStorage.setItem('supervisionCalculatorData', JSON.stringify(data));
+                },
+
+                resetCalculator() {
+                    if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+                        this.ratio = {
+                            clientHours: 6,
+                            supervisionMinutes: 60
+                        };
+                        this.clients = {
+                            perWeek: 0,
+                            sessionMinutes: 50
+                        };
+                        this.supervision = [];
+                        localStorage.removeItem('supervisionCalculatorData');
+                    }
+                },
+
+                addSupervision() {
+                    this.supervision.push({
+                        name: '',
+                        type: 'individual',
+                        minutesPerMonth: 60,
+                        groupPercentage: 50
+                    });
+                },
+
+                removeSupervision(index) {
+                    this.supervision.splice(index, 1);
+                },
+
+                get validationMessage() {
+                    if (this.supervision.length === 0) {
+                        return 'Add details of your supervision to get started.';
+                    }
+                    if (this.clients.perWeek === 0) {
+                        return 'Enter the number of clients you see each week.';
+                    }
+                    return null;
+                },
+
+                get result() {
+                    if (this.validationMessage) {
+                        return null;
+                    }
+
+                    // Calculate client hours per month (4 weeks)
+                    const sessionMinutes = this.clients.sessionMinutes === 50 ? 60 : this.clients.sessionMinutes;
+                    const clientHoursPerWeek = (this.clients.perWeek * sessionMinutes) / 60;
+                    const clientHoursPerMonth = clientHoursPerWeek * 4;
+
+                    // Calculate supervision required (in hours)
+                    const supervisionRequired = (clientHoursPerMonth / this.ratio.clientHours) * (this.ratio.supervisionMinutes / 60);
+
+                    // Calculate supervision provided (in hours)
+                    let supervisionProvided = 0;
+                    this.supervision.forEach(item => {
+                        if (item.type === 'individual') {
+                            supervisionProvided += item.minutesPerMonth / 60;
+                        } else if (item.type === 'group') {
+                            const percentage = item.groupPercentage || 0;
+                            supervisionProvided += (item.minutesPerMonth / 60) * (percentage / 100);
+                        }
+                    });
+
+                    const isSufficient = supervisionProvided >= supervisionRequired;
+                    const difference = Math.abs(supervisionProvided - supervisionRequired);
+
+                    let message;
+                    if (isSufficient) {
+                        message = `✓ You have enough supervision hours!`;
+                    } else {
+                        message = `✗ You need ${difference.toFixed(1)} more hours of supervision per month.`;
+                    }
+
+                    // Calculate what happens with one more client
+                    const oneMoreClientHoursPerMonth = clientHoursPerMonth + (sessionMinutes / 60) * 4;
+                    const supervisionRequiredWithOneMore = (oneMoreClientHoursPerMonth / this.ratio.clientHours) * (this.ratio.supervisionMinutes / 60);
+                    const wouldStillBeCovered = supervisionProvided >= supervisionRequiredWithOneMore;
+
+                    let oneMoreClientMessage;
+                    if (wouldStillBeCovered) {
+                        const surplus = supervisionProvided - supervisionRequiredWithOneMore;
+                        oneMoreClientMessage = `You'll still be covered under your existing supervision (${surplus.toFixed(1)} hours surplus).`;
+                    } else {
+                        const additionalNeeded = supervisionRequiredWithOneMore - supervisionProvided;
+                        oneMoreClientMessage = `You'll need ${additionalNeeded.toFixed(1)} more hours of supervision.`;
+                    }
+
+                    return {
+                        clientHoursPerMonth,
+                        supervisionRequired,
+                        supervisionProvided,
+                        isSufficient,
+                        message,
+                        oneMoreClientMessage
+                    };
+                }
+            }
+        }
+    </script>
+</body>
+</html>
