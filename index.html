@@ -227,19 +227,19 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Client hours per month:</span>
-                                    <span class="font-semibold text-gray-900" x-text="result.clientHoursPerMonth.toFixed(1)"></span>
+                                    <span class="font-semibold text-gray-900" x-text="formatHoursAndMinutes(result.clientHoursPerMonth)"></span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Supervision required:</span>
-                                    <span class="font-semibold text-gray-900" x-text="result.supervisionRequired.toFixed(1) + ' hours'"></span>
+                                    <span class="font-semibold text-gray-900" x-text="formatHoursAndMinutes(result.supervisionRequired)"></span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Supervision provided:</span>
-                                    <span class="font-semibold text-gray-900" x-text="result.supervisionProvided.toFixed(1) + ' hours'"></span>
+                                    <span class="font-semibold text-gray-900" x-text="formatHoursAndMinutes(result.supervisionProvided)"></span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Difference:</span>
-                                    <span :class="result.isSufficient ? 'text-green-600' : 'text-red-600'" class="font-semibold" x-text="(result.supervisionProvided - result.supervisionRequired >= 0 ? '+' : '') + (result.supervisionProvided - result.supervisionRequired).toFixed(1) + ' hours'"></span>
+                                    <span :class="result.isSufficient ? 'text-green-600' : 'text-red-600'" class="font-semibold" x-text="(result.supervisionProvided - result.supervisionRequired >= 0 ? '+' : '-') + formatHoursAndMinutes(Math.abs(result.supervisionProvided - result.supervisionRequired))"></span>
                                 </div>
                             </div>
                         </div>
@@ -344,6 +344,19 @@
                     this.supervision.splice(index, 1);
                 },
 
+                formatHoursAndMinutes(decimalHours) {
+                    const hours = Math.floor(decimalHours);
+                    const minutes = Math.round((decimalHours - hours) * 60);
+
+                    if (hours === 0) {
+                        return `${minutes} mins`;
+                    } else if (minutes === 0) {
+                        return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+                    } else {
+                        return `${hours} ${hours === 1 ? 'hour' : 'hours'} ${minutes} mins`;
+                    }
+                },
+
                 get validationMessage() {
                     if (this.supervision.length === 0) {
                         return 'Add details of your supervision to get started.';
@@ -385,7 +398,7 @@
                     if (isSufficient) {
                         message = `✓ You have enough supervision hours!`;
                     } else {
-                        message = `✗ You need ${difference.toFixed(1)} more hours of supervision per month.`;
+                        message = `✗ You need ${this.formatHoursAndMinutes(difference)} more supervision per month.`;
                     }
 
                     // Calculate what happens with one more client
@@ -396,10 +409,10 @@
                     let oneMoreClientMessage;
                     if (wouldStillBeCovered) {
                         const surplus = supervisionProvided - supervisionRequiredWithOneMore;
-                        oneMoreClientMessage = `You'll still be covered under your existing supervision (${surplus.toFixed(1)} hours surplus).`;
+                        oneMoreClientMessage = `You'll still be covered under your existing supervision (${this.formatHoursAndMinutes(surplus)} surplus).`;
                     } else {
                         const additionalNeeded = supervisionRequiredWithOneMore - supervisionProvided;
-                        oneMoreClientMessage = `You'll need ${additionalNeeded.toFixed(1)} more hours of supervision.`;
+                        oneMoreClientMessage = `You'll need ${this.formatHoursAndMinutes(additionalNeeded)} more supervision.`;
                     }
 
                     return {
